@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gift Matcher - Find Perfect Gifts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .trait-btn.selected {
+            background-color: #2563eb;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <nav class="bg-white shadow-md">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold text-blue-600">Gift Matcher</h1>
+                <button id="savedBtn" class="text-blue-600 hover:text-blue-800">
+                    <i class="bi bi-bookmark-heart text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8">
+        <div id="mainForm" class="space-y-6">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">Recipient Details</h2>
+                <div class="space-y-4">
+                    <input type="text" id="recipientName" placeholder="Recipient's Name" class="w-full p-2 border rounded-md">
+                    <select id="occasion" class="w-full p-2 border rounded-md">
+                        <option value="">Select Occasion</option>
+                        <option value="birthday">Birthday</option>
+                        <option value="anniversary">Anniversary</option>
+                        <option value="holiday">Holiday</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <select id="budget" class="w-full p-2 border rounded-md">
+                        <option value="">Select Budget Range</option>
+                        <option value="under25">Under $25</option>
+                        <option value="25-50">$25 - $50</option>
+                        <option value="50-100">$50 - $100</option>
+                        <option value="100plus">$100+</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">Personality Traits</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <button class="trait-btn p-2 border rounded-md hover:bg-blue-50" data-trait="adventurous">Adventurous</button>
+                    <button class="trait-btn p-2 border rounded-md hover:bg-blue-50" data-trait="creative">Creative</button>
+                    <button class="trait-btn p-2 border rounded-md hover:bg-blue-50" data-trait="tech-savvy">Tech-Savvy</button>
+                    <button class="trait-btn p-2 border rounded-md hover:bg-blue-50" data-trait="sporty">Sports Lover</button>
+                    <button class="trait-btn p-2 border rounded-md hover:bg-blue-50" data-trait="bookworm">Bookworm</button>
+                    <button class="trait-btn p-2 border rounded-md hover:bg-blue-50" data-trait="foodie">Foodie</button>
+                </div>
+            </div>
+
+            <button id="findGifts" class="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700">Find Perfect Gifts</button>
+        </div>
+
+        <div id="results" class="hidden space-y-6 mt-8">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">Recommended Gifts</h2>
+                <div id="giftList" class="space-y-4"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const traits = new Set();
+        const giftDatabase = {
+            'adventurous': [
+                { name: 'Adventure Camera', price: 89.99, description: 'Waterproof action camera for capturing adventures', link: '#' },
+                { name: 'Hiking Backpack', price: 45.99, description: 'Durable backpack for outdoor activities', link: '#' }
+            ],
+            'creative': [
+                { name: 'Art Supply Set', price: 35.99, description: 'Complete art supply kit for artists', link: '#' },
+                { name: 'Digital Drawing Tablet', price: 79.99, description: 'Professional drawing tablet for digital art', link: '#' }
+            ],
+            'tech-savvy': [
+                { name: 'Smart Speaker', price: 49.99, description: 'Voice-controlled smart home speaker', link: '#' },
+                { name: 'Wireless Earbuds', price: 89.99, description: 'High-quality wireless earbuds with noise cancellation', link: '#' }
+            ],
+            'sporty': [
+                { name: 'Fitness Tracker', price: 59.99, description: 'Advanced fitness tracking watch', link: '#' },
+                { name: 'Sports Equipment Set', price: 45.99, description: 'Multi-sport equipment bundle', link: '#' }
+            ],
+            'bookworm': [
+                { name: 'E-reader', price: 99.99, description: 'Latest e-reader with backlight', link: '#' },
+                { name: 'Book Subscription', price: 29.99, description: 'Monthly book delivery service', link: '#' }
+            ],
+            'foodie': [
+                { name: 'Gourmet Gift Basket', price: 75.99, description: 'Curated selection of gourmet foods', link: '#' },
+                { name: 'Cooking Class Voucher', price: 89.99, description: 'Online cooking masterclass subscription', link: '#' }
+            ]
+        };
+
+        document.querySelectorAll('.trait-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.classList.toggle('selected');
+                const trait = btn.dataset.trait;
+                if (traits.has(trait)) {
+                    traits.delete(trait);
+                } else {
+                    traits.add(trait);
+                }
+            });
+        });
+
+        document.getElementById('findGifts').addEventListener('click', () => {
+            const name = document.getElementById('recipientName').value;
+            const occasion = document.getElementById('occasion').value;
+            const budget = document.getElementById('budget').value;
+
+            if (!name || !occasion || !budget || traits.size === 0) {
+                alert('Please fill in all fields and select at least one trait');
+                return;
+            }
+
+            const recommendations = [];
+            traits.forEach(trait => {
+                const gifts = giftDatabase[trait];
+                if (gifts) {
+                    recommendations.push(...gifts);
+                }
+            });
+
+            const giftList = document.getElementById('giftList');
+            giftList
+            .innerHTML = '';
+
+            recommendations.forEach(gift => {
+                const giftElement = document.createElement('div');
+                giftElement.className = 'border rounded-md p-4';
+                giftElement.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-semibold">${gift.name}</h3>
+                            <p class="text-gray-600 text-sm">${gift.description}</p>
+                            <p class="text-blue-600 mt-2">$${gift.price}</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="save-gift text-gray-600 hover:text-blue-600">
+                                <i class="bi bi-bookmark"></i>
+                            </button>
+                            <button class="share-gift text-gray-600 hover:text-blue-600">
+                                <i class="bi bi-share"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                giftElement.querySelector('.save-gift').addEventListener('click', function() {
+                    this.innerHTML = '<i class="bi bi-bookmark-fill text-blue-600"></i>';
+                    saveGift(gift);
+                });
+
+                giftElement.querySelector('.share-gift').addEventListener('click', () => {
+                    shareGift(gift);
+                });
+
+                giftList.appendChild(giftElement);
+            });
+
+            document.getElementById('results').classList.remove('hidden');
+        });
+
+        function saveGift(gift) {
+            const saved = JSON.parse(localStorage.getItem('savedGifts') || '[]');
+            saved.push(gift);
+            localStorage.setItem('savedGifts', JSON.stringify(saved));
+        }
+
+        function shareGift(gift) {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Gift Suggestion',
+                    text: `Check out this gift: ${gift.name} - ${gift.description} ($${gift.price})`,
+                    url: gift.link
+                });
+            } else {
+                alert('Sharing is not supported on this browser');
+            }
+        }
+
+        document.getElementById('savedBtn').addEventListener('click', () => {
+            const saved = JSON.parse(localStorage.getItem('savedGifts') || '[]');
+            if (saved.length === 0) {
+                alert('No saved gifts yet!');
+                return;
+            }
+
+            const giftList = document.getElementById('giftList');
+            giftList.innerHTML = '';
+            document.getElementById('mainForm').classList.add('hidden');
+            document.getElementById('results').classList.remove('hidden');
+
+            saved.forEach(gift => {
+                const giftElement = document.createElement('div');
+                giftElement.className = 'border rounded-md p-4';
+                giftElement.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-semibold">${gift.name}</h3>
+                            <p class="text-gray-600 text-sm">${gift.description}</p>
+                            <p class="text-blue-600 mt-2">$${gift.price}</p>
+                        </div>
+                        <button class="remove-gift text-gray-600 hover:text-red-600">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                `;
+
+                giftElement.querySelector('.remove-gift').addEventListener('click', () => {
+                    const savedGifts = JSON.parse(localStorage.getItem('savedGifts') || '[]');
+                    const updatedGifts = savedGifts.filter(g => g.name !== gift.name);
+                    localStorage.setItem('savedGifts', JSON.stringify(updatedGifts));
+                    giftElement.remove();
+                    if (updatedGifts.length === 0) {
+                        document.getElementById('mainForm').classList.remove('hidden');
+                        document.getElementById('results').classList.add('hidden');
+                    }
+                });
+
+                giftList.appendChild(giftElement);
+            });
+        });
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
